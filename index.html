@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打字练习软件</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>打字练习软件</h1>
+        
+        <div class="settings">
+        <div class="selectors">
+            <div class="selector-item">
+                <label for="difficulty">难度选择：</label>
+                <select id="difficulty">
+                    <option value="words">简单 - 单词</option>
+                    <option value="sentences">中等 - 句子</option>
+                    <option value="paragraphs">困难 - 段落</option>
+                    <option value="articles">专家 - 文章</option>
+                </select>
+            </div>
+            <div class="selector-item">
+                <label for="theme">界面风格：</label>
+                <select id="theme">
+                    <option value="default">默认风格</option>
+                    <option value="cyberpunk">赛博朋克</option>
+                    <option value="neon">霓虹灯</option>
+                    <option value="minimal">极简风格</option>
+                </select>
+            </div>
+            <div class="selector-item">
+                <label for="finger-guide">手指指引：</label>
+                <select id="finger-guide">
+                    <option value="on">开启</option>
+                    <option value="off">关闭</option>
+                </select>
+            </div>
+        </div>
+        <button id="start-btn">开始练习</button>
+    </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <span>错误数：</span>
+                <span id="error-count">0</span>
+            </div>
+            <div class="stat-item">
+                <span>WPM：</span>
+                <span id="wpm">0</span>
+            </div>
+            <div class="stat-item">
+                <span>CPM：</span>
+                <span id="cpm">0</span>
+            </div>
+            <div class="stat-item">
+                <span>准确率：</span>
+                <span id="accuracy">100%</span>
+            </div>
+            <div class="stat-item">
+                <span>时间：</span>
+                <span id="time">0s</span>
+            </div>
+        </div>
+        
+        <div class="typing-area">
+            <div class="progress-container">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+            <div id="text-display"></div>
+        </div>
+        
+        <div class="keyboard-container">
+            <div class="keyboard" id="virtual-keyboard">
+                <!-- 键盘将通过JavaScript动态生成 -->
+            </div>
+            <div class="finger-legend" id="finger-legend" aria-label="手指指引图例">
+                <h3>手指指引图例</h3>
+                <ul class="legend-list">
+                    <li><span class="legend-swatch left-pinky"></span>左手小指</li>
+                    <li><span class="legend-swatch left-ring"></span>左手无名指</li>
+                    <li><span class="legend-swatch left-middle"></span>左手中指</li>
+                    <li><span class="legend-swatch left-index"></span>左手食指</li>
+                    <li><span class="legend-swatch thumb"></span>拇指（空格）</li>
+                    <li><span class="legend-swatch right-index"></span>右手食指</li>
+                    <li><span class="legend-swatch right-middle"></span>右手中指</li>
+                    <li><span class="legend-swatch right-ring"></span>右手无名指</li>
+                    <li><span class="legend-swatch right-pinky"></span>右手小指</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 结果弹窗 -->
+    <div id="results-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>打字练习结果</h2>
+            <div class="result-stats">
+                <div class="result-item">
+                    <span>错误数:</span>
+                    <span id="result-errors">0</span>
+                </div>
+                <div class="result-item">
+                    <span>WPM:</span>
+                    <span id="result-wpm">0</span>
+                </div>
+                <div class="result-item">
+                    <span>CPM:</span>
+                    <span id="result-cpm">0</span>
+                </div>
+                <div class="result-item">
+                    <span>准确率:</span>
+                    <span id="result-accuracy">100%</span>
+                </div>
+            </div>
+            <button id="try-again-btn">再试一次</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
