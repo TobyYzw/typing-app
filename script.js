@@ -65,6 +65,11 @@ const challengePanel = document.getElementById('challenge-panel');
 const challengeLevelText = document.getElementById('challenge-level-text');
 const challengeResetBtn = document.getElementById('challenge-reset-btn');
 const nextLevelBtn = document.getElementById('next-level-btn');
+const congratsModal = document.getElementById('congrats-modal');
+const congratsClose = document.getElementById('congrats-close');
+const confettiContainer = document.getElementById('confetti-container');
+const congratsRetryBtn = document.getElementById('congrats-retry-btn');
+const congratsPracticeBtn = document.getElementById('congrats-practice-btn');
 
 // 手指映射（键盘按键对应的手指）
 const fingerMap = {
@@ -121,6 +126,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // 模式切换与闯关面板按钮
     if (modeSelect) modeSelect.addEventListener('change', handleModeChange);
     if (challengeResetBtn) challengeResetBtn.addEventListener('click', resetChallengeProgress);
+    if (congratsClose) congratsClose.addEventListener('click', () => { if (congratsModal) congratsModal.style.display = 'none'; });
+    if (congratsRetryBtn) congratsRetryBtn.addEventListener('click', () => {
+        if (congratsModal) congratsModal.style.display = 'none';
+        resetChallengeProgress();
+        challengeMode = true;
+        if (modeSelect) modeSelect.value = 'challenge';
+        handleModeChange();
+        startTyping();
+    });
+    if (congratsPracticeBtn) congratsPracticeBtn.addEventListener('click', () => {
+        if (congratsModal) congratsModal.style.display = 'none';
+        challengeMode = false;
+        inFinalChallenge = false;
+        if (modeSelect) modeSelect.value = 'practice';
+        handleModeChange();
+        startTyping();
+    });
     
     // 初始化主题和手指指引
     changeTheme();
@@ -605,6 +627,11 @@ function showResultsModal() {
     resultCpm.textContent = cpmDisplay.textContent;
     resultAccuracy.textContent = accuracyDisplay.textContent;
     
+    // 闯关最终挑战完成后直接显示恭喜页面
+    if (challengeMode && inFinalChallenge) {
+        showCongratsModal();
+        return;
+    }
     // 显示弹窗
     modal.style.display = 'block';
     
@@ -636,8 +663,9 @@ function showResultsModal() {
             if (!inFinalChallenge && currentLevelIndex + 1 >= challengeLevels.length) {
                 nextLevelBtn.textContent = '开始最终挑战';
             } else if (inFinalChallenge) {
-                nextLevelBtn.textContent = '闯关完成';
-                nextLevelBtn.disabled = true;
+                // 已进入最终挑战且完成，本次不显示结果按钮，改为恭喜页面
+                nextLevelBtn.style.display = 'none';
+                return;
             } else {
                 nextLevelBtn.textContent = '下一关';
                 nextLevelBtn.disabled = false;
@@ -660,6 +688,28 @@ function showResultsModal() {
             };
         } else {
             nextLevelBtn.style.display = 'none';
+        }
+    }
+}
+
+// 显示恭喜页面并生成彩带
+function showCongratsModal() {
+    if (!congratsModal) return;
+    congratsModal.style.display = 'block';
+    if (confettiContainer) {
+        confettiContainer.innerHTML = '';
+        const colors = ['c1', 'c2', 'c3', 'c4', 'c5'];
+        const count = 40;
+        for (let i = 0; i < count; i++) {
+            const span = document.createElement('span');
+            span.className = `confetti ${colors[i % colors.length]}`;
+            const left = Math.random() * 100;
+            const duration = 3 + Math.random() * 3; // 3-6s
+            const delay = Math.random() * 0.8; // 0-0.8s
+            span.style.left = `${left}%`;
+            span.style.animationDuration = `${duration}s`;
+            span.style.animationDelay = `${delay}s`;
+            confettiContainer.appendChild(span);
         }
     }
 }
