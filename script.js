@@ -6,6 +6,13 @@ let errors = 0;
 let totalTyped = 0;
 let isActive = false;
 
+// 闯关模式相关状态
+let challengeMode = false;
+let challengeLevels = [];
+let currentLevelIndex = 0;
+let inFinalChallenge = false;
+let finalParagraphText = '';
+
 // 键盘布局
 const keyboardLayout = [
     ['`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'Backspace'],
@@ -41,6 +48,7 @@ const texts = {
 };
 
 // DOM 元素
+const modeSelect = document.getElementById('mode');
 const difficultySelect = document.getElementById('difficulty');
 const themeSelect = document.getElementById('theme');
 const fingerGuideSelect = document.getElementById('finger-guide');
@@ -53,6 +61,10 @@ const accuracyDisplay = document.getElementById('accuracy');
 const timeDisplay = document.getElementById('time');
 const virtualKeyboard = document.getElementById('virtual-keyboard');
 const progressBar = document.getElementById('progress-bar');
+const challengePanel = document.getElementById('challenge-panel');
+const challengeLevelText = document.getElementById('challenge-level-text');
+const challengeResetBtn = document.getElementById('challenge-reset-btn');
+const nextLevelBtn = document.getElementById('next-level-btn');
 
 // 手指映射（键盘按键对应的手指）
 const fingerMap = {
@@ -105,11 +117,104 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 手指指引切换
     fingerGuideSelect.addEventListener('change', toggleFingerGuide);
+
+    // 模式切换与闯关面板按钮
+    if (modeSelect) modeSelect.addEventListener('change', handleModeChange);
+    if (challengeResetBtn) challengeResetBtn.addEventListener('click', resetChallengeProgress);
     
     // 初始化主题和手指指引
     changeTheme();
     toggleFingerGuide();
+
+    // 初始化闯关模式（若之前有保存的进度则恢复）
+    initChallengeLevels();
+    loadChallengeProgress();
+    updateChallengeUIVisibility();
+    updateChallengeLevelLabel();
 });
+
+// 处理模式切换
+function handleModeChange() {
+    challengeMode = modeSelect && modeSelect.value === 'challenge';
+    updateChallengeUIVisibility();
+    updateChallengeLevelLabel();
+    // 闯关模式下禁用难度选择，避免冲突
+    if (difficultySelect) difficultySelect.disabled = challengeMode;
+    startButton.textContent = challengeMode ? '开始闯关' : '开始练习';
+}
+
+// 更新闯关面板显隐
+function updateChallengeUIVisibility() {
+    if (challengePanel) {
+        challengePanel.style.display = challengeMode ? '' : 'none';
+    }
+}
+
+// 初始化关卡数据（由易到难）
+function initChallengeLevels() {
+    finalParagraphText = texts.paragraphs[1] || texts.paragraphs[0];
+    challengeLevels = [
+        'Hello world.',
+        'Practice makes perfect.',
+        'Keep trying and never give up.',
+        'Typing improves with regular practice.',
+        'The quick brown fox jumps over the lazy dog.',
+        'Pack my box with five dozen liquor jugs.',
+        'Sphinx of black quartz, judge my vow.',
+        'Crazy Fredrick bought many very exquisite opal jewels.',
+        'Jackdaws love my big sphinx of quartz.',
+        'Amazingly few discotheques provide jukeboxes.'
+    ];
+}
+
+// 恢复进度
+function loadChallengeProgress() {
+    try {
+        const raw = localStorage.getItem('typing_challenge_progress');
+        if (raw) {
+            const data = JSON.parse(raw);
+            currentLevelIndex = Math.min(Math.max(0, data.currentLevelIndex || 0), challengeLevels.length - 1);
+            inFinalChallenge = !!data.inFinalChallenge;
+            // 默认进入练习模式，不自动启用闯关，除非用户选择
+        }
+    } catch (e) {
+        // 忽略解析错误，使用默认值
+    }
+}
+
+// 保存进度
+function saveChallengeProgress() {
+    try {
+        localStorage.setItem('typing_challenge_progress', JSON.stringify({
+            currentLevelIndex,
+            inFinalChallenge
+        }));
+    } catch (e) {
+        // 忽略存储错误
+    }
+}
+
+// 重置进度
+function resetChallengeProgress() {
+    currentLevelIndex = 0;
+    inFinalChallenge = false;
+    saveChallengeProgress();
+    updateChallengeLevelLabel();
+}
+
+// 更新关卡文案
+function updateChallengeLevelLabel() {
+    if (!challengeLevelText) return;
+    if (!challengeMode) {
+        challengeLevelText.textContent = '当前关卡：—';
+        return;
+    }
+    if (inFinalChallenge) {
+        challengeLevelText.textContent = '最终挑战：困难段落';
+    } else {
+        challengeLevelText.textContent = `当前关卡：${currentLevelIndex + 1} / ${challengeLevels.length}`;
+    }
+}
 
 // 切换主题
 function changeTheme() {
@@ -296,20 +401,22 @@ function startTyping() {
     // 重置进度条
     resetProgressBar();
     
-    // 获取难度和文本
-    const difficulty = difficultySelect.value;
-    const textArray = texts[difficulty];
-    
-    // 记录上一次的文本，确保不重复
-    const lastText = currentText;
-    let newText;
-    
-    // 确保新选择的文本与上一次不同
-    do {
-        newText = textArray[Math.floor(Math.random() * textArray.length)];
-    } while (newText === lastText && textArray.length > 1);
-    
-    currentText = newText;
+    // 获取文本：根据模式选择
+    if (challengeMode) {
+        // 闯关模式：当前关卡或最终段落
+        currentText = inFinalChallenge ? finalParagraphText : (challengeLevels[currentLevelIndex] || challengeLevels[0]);
+    } else {
+        const difficulty = difficultySelect.value;
+        const textArray = texts[difficulty];
+        // 记录上一次的文本，确保不重复
+        const lastText = currentText;
+        let newText;
+        // 确保新选择的文本与上一次不同
+        do {
+            newText = textArray[Math.floor(Math.random() * textArray.length)];
+        } while (newText === lastText && textArray.length > 1);
+        currentText = newText;
+    }
     
     // 显示文本
     displayText();
@@ -318,7 +425,7 @@ function startTyping() {
     document.addEventListener('keydown', handleKeyPress);
     
     // 更改按钮文本
-    startButton.textContent = '重新开始';
+    startButton.textContent = challengeMode ? '重新开始当前关卡' : '重新开始';
 }
 
 // 显示文本
@@ -477,7 +584,7 @@ function finishTyping() {
     // 计算最终统计
     updateStats();
     
-    // 显示结果弹窗
+    // 显示结果弹窗（包含闯关模式下一步操作）
     showResultsModal();
     
     // 重置所有键盘高亮
@@ -520,6 +627,41 @@ function showResultsModal() {
         modal.style.display = 'none';
         startTyping();
     };
+
+    // 闯关模式：显示并绑定“下一关/最终挑战”按钮
+    if (nextLevelBtn) {
+        if (challengeMode) {
+            nextLevelBtn.style.display = 'inline-block';
+            // 设置按钮文案
+            if (!inFinalChallenge && currentLevelIndex + 1 >= challengeLevels.length) {
+                nextLevelBtn.textContent = '开始最终挑战';
+            } else if (inFinalChallenge) {
+                nextLevelBtn.textContent = '闯关完成';
+                nextLevelBtn.disabled = true;
+            } else {
+                nextLevelBtn.textContent = '下一关';
+                nextLevelBtn.disabled = false;
+            }
+            nextLevelBtn.onclick = function() {
+                // 关闭弹窗
+                modal.style.display = 'none';
+                if (!inFinalChallenge && currentLevelIndex + 1 >= challengeLevels.length) {
+                    // 进入最终挑战
+                    inFinalChallenge = true;
+                } else if (!inFinalChallenge) {
+                    // 普通关卡推进
+                    currentLevelIndex = Math.min(currentLevelIndex + 1, challengeLevels.length - 1);
+                } else {
+                    // 最终挑战已完成，无动作
+                }
+                saveChallengeProgress();
+                updateChallengeLevelLabel();
+                startTyping();
+            };
+        } else {
+            nextLevelBtn.style.display = 'none';
+        }
+    }
 }
 
 // 更新进度条
