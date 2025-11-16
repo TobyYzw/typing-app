@@ -158,6 +158,13 @@ document.addEventListener('DOMContentLoaded', () => {
 // 处理模式切换
 function handleModeChange() {
     challengeMode = modeSelect && modeSelect.value === 'challenge';
+    // 进入闯关模式时，默认从第一关开始且不在最终挑战
+    if (challengeMode) {
+        currentLevelIndex = 0;
+        inFinalChallenge = false;
+        justFinishedFinalChallenge = false;
+        saveChallengeProgress();
+    }
     updateChallengeUIVisibility();
     updateChallengeLevelLabel();
     // 闯关模式下禁用难度选择，避免冲突
